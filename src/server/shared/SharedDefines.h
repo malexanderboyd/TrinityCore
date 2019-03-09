@@ -3458,6 +3458,7 @@ enum BattlegroundTypeId : uint32
     BATTLEGROUND_RL             = 8, // Ruins of Lordaernon
     BATTLEGROUND_SA             = 9, // Strand of the Ancients
     BATTLEGROUND_DS             = 10, // Dalaran Sewers
+    BATTLEGROUND_BR             = 69, // Battle Royal
     BATTLEGROUND_RV             = 11, // Ring of Valor
     BATTLEGROUND_IC             = 30, // Isle of Conquest
     BATTLEGROUND_RB             = 32  // Random Battleground
@@ -3602,6 +3603,7 @@ enum BattlegroundQueueTypeId
     BATTLEGROUND_QUEUE_SA       = 5,
     BATTLEGROUND_QUEUE_IC       = 6,
     BATTLEGROUND_QUEUE_RB       = 7,
+    BATTLEGROUND_QUEUE_BR       = 22,
     BATTLEGROUND_QUEUE_2v2      = 8,
     BATTLEGROUND_QUEUE_3v3      = 9,
     BATTLEGROUND_QUEUE_5v5      = 10,

@@ -29,6 +29,7 @@
 #include "BattlegroundDS.h"
 #include "BattlegroundRV.h"
 #include "BattlegroundIC.h"
+#include "BattlegroundBR.h"
 #include "Common.h"
 #include "Containers.h"
 #include "Chat.h"
@@ -392,6 +393,9 @@ Battleground* BattlegroundMgr::CreateNewBattleground(BattlegroundTypeId original
         case BATTLEGROUND_RL:
             bg = new BattlegroundRL(*(BattlegroundRL*)bg_template);
             break;
+        case BATTLEGROUND_BR:
+            bg = new BattlegroundBR(*(BattlegroundBR*)bg_template);
+            break;
         case BATTLEGROUND_SA:
             bg = new BattlegroundSA(*(BattlegroundSA*)bg_template);
             break;
@@ -471,6 +475,9 @@ bool BattlegroundMgr::CreateBattleground(BattlegroundTemplate const* bgTemplate)
             case BATTLEGROUND_BE:
                 bg = new BattlegroundBE();
                 break;
+            case BATTLEGROUND_BR:
+                bg = new BattlegroundBR();
+                break;
             case BATTLEGROUND_EY:
                 bg = new BattlegroundEY();
                 break;
@@ -496,6 +503,7 @@ bool BattlegroundMgr::CreateBattleground(BattlegroundTemplate const* bgTemplate)
                 bg = new Battleground();
                 bg->SetRandom(true);
                 break;
+
             default:
                 return false;
         }
@@ -758,6 +766,8 @@ BattlegroundQueueTypeId BattlegroundMgr::BGQueueTypeId(BattlegroundTypeId bgType
             return BATTLEGROUND_QUEUE_SA;
         case BATTLEGROUND_WS:
             return BATTLEGROUND_QUEUE_WS;
+        case BATTLEGROUND_BR:
+            return BATTLEGROUND_QUEUE_BR;
         case BATTLEGROUND_AA:
         case BATTLEGROUND_BE:
         case BATTLEGROUND_DS:
@@ -798,6 +808,8 @@ BattlegroundTypeId BattlegroundMgr::BGTemplateId(BattlegroundQueueTypeId bgQueue
             return BATTLEGROUND_IC;
         case BATTLEGROUND_QUEUE_RB:
             return BATTLEGROUND_RB;
+        case BATTLEGROUND_QUEUE_BR:
+            return BATTLEGROUND_BR;
         case BATTLEGROUND_QUEUE_2v2:
         case BATTLEGROUND_QUEUE_3v3:
         case BATTLEGROUND_QUEUE_5v5:

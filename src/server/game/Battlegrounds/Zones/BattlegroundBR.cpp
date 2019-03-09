@@ -89,3 +89,7 @@ void BattlegroundBR::CheckWinConditions()
         }
     }
 }
+
+void BattlegroundBR::EndBattleground(uint32 winner) {
+    Battleground::EndBattleground(winner);
+}

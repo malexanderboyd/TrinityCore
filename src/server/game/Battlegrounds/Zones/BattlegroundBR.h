@@ -50,5 +50,6 @@ class BattlegroundBR : public Arena
         void HandleAreaTrigger(Player* Source, uint32 Trigger) override;
         void CheckWinConditions() override;
         bool SetupBattleground() override;
+        void EndBattleground(uint32 winner) override;
 };
 #endif

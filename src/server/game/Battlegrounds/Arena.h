@@ -56,7 +56,6 @@ class TC_GAME_API Arena : public Battleground
         void UpdateArenaWorldState();
 
         void HandleKillPlayer(Player* player, Player* killer) override;
-
     private:
         void RemovePlayerAtLeave(ObjectGuid guid, bool transport, bool sendPacket) override;
         void CheckWinConditions() override;

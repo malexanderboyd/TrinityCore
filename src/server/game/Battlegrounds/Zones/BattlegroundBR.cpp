@@ -83,9 +83,9 @@ void BattlegroundBR::CheckWinConditions()
 
     if(allianceCount + hordeCount == 1) {
         if(allianceCount == 1) {
-            EndBattleground(ALLIANCE);
+           BattlegroundBR::EndBattleground(ALLIANCE);
         } else {
-            EndBattleground(HORDE);
+            BattlegroundBR::EndBattleground(HORDE);
         }
     }
 }

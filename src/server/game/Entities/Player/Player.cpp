@@ -7086,7 +7086,7 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
     }
 
     // Treat players having a quest flagging for PvP as always in hostile area
-    pvpInfo.IsHostile = pvpInfo.IsInHostileArea || HasPvPForcingQuest();
+    pvpInfo.IsHostile = pvpInfo.IsInHostileArea || HasPvPForcingQuest() || newZone == 493;
 
     if (zone->flags & AREA_FLAG_CAPITAL)                     // Is in a capital city
     {

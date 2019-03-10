@@ -3,6 +3,9 @@
 //
 
 #include "BattleRoyal.h"
+#include "GameObject.h"
+#include "GameObjectAI.h"
+#include "Player.h"
 #include "ScriptMgr.h"
 
 //void AddSC_magisters_terrace()

@@ -7,6 +7,7 @@
 #include "GameObjectAI.h"
 #include "Player.h"
 #include "ScriptMgr.h"
+#include "World.h"
 
 //void AddSC_magisters_terrace()
 //{
@@ -40,7 +41,7 @@ public:
     };
 
     GameObjectAI *GetAI(GameObject *go) const override {
-        return new go_queue_portal(go);
+        return new go_queue_portalAI(go);
     }
 };
 

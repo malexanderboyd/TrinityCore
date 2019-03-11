@@ -51,6 +51,7 @@ public:
     PlayerHandler() : PlayerScript("BRPlayerScript") {}
 
     void OnMapChanged(Player *player) {
+        TC_LOG_FATAL("battleroyale", "MapChanged here loggy %d", player->GetZoneId())
         if (player->GetZoneId() == 493) {
             char msg[250];
             snprintf(msg, 250,

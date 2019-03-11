@@ -17,7 +17,7 @@
 
 // This is where scripts' loading functions should be declared:
 
-void AddBattleRoyalScripts();
+#include "BattleRoyal/BattleRoyal.cpp"
 
 // The name of this function should match:
 // void Add${NameOfDirectory}Scripts()

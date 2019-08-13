@@ -16,10 +16,13 @@
  */
 
 // This is where scripts' loading functions should be declared:
-
+void AddSC_battle_royal();
+void AddSC_battle_royal_gamemaster();
 
 // The name of this function should match:
 // void Add${NameOfDirectory}Scripts()
 void AddCustomScripts()
 {
+    AddSC_battle_royal();
+    AddSC_battle_royal_gamemaster();
 }

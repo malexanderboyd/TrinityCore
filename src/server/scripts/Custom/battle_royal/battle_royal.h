@@ -46,7 +46,7 @@ private:
 
     void setNewRelic();
 
-    void infectPlayers(int relicAuraSpellID);
+    void infectPlayers();
 
     bool IsPlayerInRoyale(Player *player);
 
@@ -72,7 +72,15 @@ private:
 
     void spawnNewRelic();
 
+    void setGracePeriod();
+
+    void clearExistingRelicBuffs();
+
+    int getRelicBuffSpellID();
+
     void HandleInfectionKill(Player* player);
+
+    void SelectRandomRelic();
 
     static Creature *SpawnCreature(uint32 entry, Position const &pos);
 
@@ -86,10 +94,10 @@ private:
     bool aggressivePlayers = false;
     bool startInfecting = false;
     ulong playerLimit = 40;
-    int currentIteration = 0;
+    int currentIteration = 1;
     int startTimer = 60000;
     int relicSwitchTimer = 60000;
-    int infectTimer = 2000;
+    int gracePeriod = 2000;
     Position spawnPointNighthaven;
     Position spawnPointShrine;
     Position spawnPointDens;

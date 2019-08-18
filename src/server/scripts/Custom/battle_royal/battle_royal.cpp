@@ -16,12 +16,20 @@
 #include "World.h"
 #include "WorldSession.h"
 #include "OutdoorPvP.h"
-#include "stdlib.h"
+#include <cstdlib>
+#include <ctime>
+#include <random>
 #include "UnitDefines.h"
 
+enum REWARD_CURRENCY {
+    BLOODSHED_TOKEN = 19063,
+    KINGS_BADGE = 1995
+};
 
-uint32 const ITEM_KILL_TOKEN = 133701; // Bloodshed Token
-uint32 const ITEM_WINNER_TOKEN = 133702; // Kings Badge
+
+
+uint32 const ITEM_KILL_TOKEN = BLOODSHED_TOKEN;
+uint32 const ITEM_WINNER_TOKEN = KINGS_BADGE;
 int const SPELL_RELIC_BUFF_1 = 63130;
 int const SPELL_RELIC_BUFF_2 = 63131;
 int const SPELL_RELIC_BUFF_3 = 63132;
@@ -30,8 +38,8 @@ int const SPELL_INFECT_DMG4 = 11821;
 
 int const FIVE_MINUTES_IN_MS = 300000;
 int const ONE_MINUTE_IN_MS = 60000;
+int RELIC = 1;
 
-int RELIC = -1;
 
 class BattleRoyalRelic : public GameObjectScript {
 public:
@@ -162,7 +170,6 @@ void BattleRoyale::TeleportPlayerToHS(Player* player) {
 }
 
 void BattleRoyale::HandlePlayerEnterZone(Player* player, uint32 zone) {
-
     if(player->IsGameMaster()) {
         return;
     }
@@ -176,9 +183,12 @@ void BattleRoyale::HandlePlayerEnterZone(Player* player, uint32 zone) {
         }
     } else {
         // add player to queue
-        queue.push_back(player->GetGUID());
+        if(!IsPlayerInQueue(player)) {
+            queue.push_back(player->GetGUID());
+        }
         NotifyPlayerEnteredQueue(player);
     }
+    OutdoorPvP::HandlePlayerEnterZone(player, zone);
 }
 
 void BattleRoyale::HandlePlayerLeaveZone(Player *player, uint32 zone) {
@@ -191,13 +201,14 @@ void BattleRoyale::HandlePlayerLeaveZone(Player *player, uint32 zone) {
         RemovePlayerFromQueue(player);
     }
     removePlayerFFAFlags(player);
+    OutdoorPvP::HandlePlayerLeaveZone(player, zone);
 }
 
 void BattleRoyale::resetRoyale() {
     gameStarted = false;
     aggressivePlayers = false;
     startInfecting = false;
-    currentIteration = 0;
+    currentIteration = 1;
     startTimer = 60000;
     relicSwitchTimer = 60000;
     playersInRoyale.clear();
@@ -212,47 +223,48 @@ void BattleRoyale::setNewRelic() {
    // 5 min -> 5 min -> 3:20 -> 2:20 -> 2:30 -> 1:30 -> 2:00 -> 1:00 -> 2:00 -> 0:40 -> 1:30 -> 1:30 -> 0:30 -> 1:00 -> 0:30
     switch(currentIteration) {
         case 1:
-            relicSwitchTimer = ONE_MINUTE_IN_MS;
-            infectTimer = 45000;
-            RELIC = 1;
+            relicSwitchTimer = FIVE_MINUTES_IN_MS;
             break;
         case 2:
-            relicSwitchTimer = ONE_MINUTE_IN_MS;
-            infectTimer = 35000;
-            RELIC = 2;
+            relicSwitchTimer = ONE_MINUTE_IN_MS * 4;
             break;
         case 3:
             relicSwitchTimer = ONE_MINUTE_IN_MS * 3;
-            infectTimer = 35000;
-            RELIC = 3;
             break;
         case 4:
             relicSwitchTimer = ONE_MINUTE_IN_MS * 2;
-            infectTimer = 25000;
-            RELIC = 2;
             break;
         case 5:
             relicSwitchTimer = ONE_MINUTE_IN_MS * 2;
-            infectTimer = 25000;
-            RELIC = 1;
             break;
         case 6:
             relicSwitchTimer = ONE_MINUTE_IN_MS;
-            infectTimer = 15000;
-            RELIC = 3;
             break;
         case 7:
             relicSwitchTimer = ONE_MINUTE_IN_MS;
-            infectTimer = 15000;
-            RELIC = 2;
             break;
         default:
             relicSwitchTimer = ONE_MINUTE_IN_MS / 2;
-            infectTimer = 2000;
-            RELIC = 3;
             break;
     }
     currentIteration += 1;
+
+    SelectRandomRelic();
+}
+
+void BattleRoyale::SelectRandomRelic() {
+    std::mt19937 mersenne(static_cast<std::mt19937::result_type>(std::time(nullptr)));
+    std::uniform_int_distribution<> die(1, 3);
+    int newRelic = (int) die(mersenne);
+    while(newRelic == RELIC) {
+        newRelic = (int) die(mersenne);
+    }
+    RELIC = newRelic;
+}
+
+
+void BattleRoyale::setGracePeriod() {
+    gracePeriod = (int) (relicSwitchTimer * .25);
 }
 
 void BattleRoyale::NotifyNewRelic() {
@@ -260,13 +272,13 @@ void BattleRoyale::NotifyNewRelic() {
     std::string s;
     switch(RELIC) {
         case 1:
-            s = "A new relic has been seen in Nighthaven! (Players Remaining: [%lu])";
+            s = "New infection released! A relic in Nighthaven has the cure! (Time before infection: %i seconds)";
             break;
         case 2:
-            s = "A new relic has appeared at the Shrine of Remulos! (Players Remaining: [%lu])";
+            s = "New infection released! The Shrine of Remulos' relic has the cure! (Time before infection: %i seconds)";
             break;
         case 3:
-            s = "A new relic has been spotted at the Stormrage Barrow Dens! (Players Remaining: [%lu])";
+            s = "New infection released! A relic was spotted at Stormrage Barrow Dens! (Time before infection: %i seconds)";
             break;
         default:
             s = "This shouldnt happen, something is broken!";
@@ -274,7 +286,7 @@ void BattleRoyale::NotifyNewRelic() {
     }
     snprintf(msg, 250,
              s.c_str(),
-             playersInRoyale.size());
+             gracePeriod / 1000);
     sWorld->SendServerMessage(SERVER_MSG_STRING, msg);
 }
 
@@ -306,21 +318,6 @@ bool BattleRoyale::Update(uint32 diff) {
         startRoyale();
     }
 
-    if (startTimer <= m_diff && gameStarted && !aggressivePlayers) {
-        TurnPlayersAggressive();
-        aggressivePlayers = true;
-        char msg[250];
-        snprintf(msg, 250,
-                 "The Battle Royale has begun! Good luck! (Players: [%lu])",
-                 playersInRoyale.size());
-        sWorld->SendServerMessage(SERVER_MSG_STRING, msg);
-            game_master->Yell("The battle royal has begun!",
-                                LANG_UNIVERSAL);
-            return true;
-        }
-
-    startTimer -= m_diff;
-
     if(gameStarted) {
 
         if(aggressivePlayers) {
@@ -339,37 +336,58 @@ bool BattleRoyale::Update(uint32 diff) {
             if(currentIteration == 1) {
                 startInfecting = true;
             }
+            clearExistingRelicBuffs();
             setNewRelic();
             spawnNewRelic();
+            setGracePeriod();
             NotifyNewRelic();
         }
 
-        if(infectTimer <= m_diff && startInfecting) { // Damage players without relic buffs
-            int spellID;
-            switch(RELIC) {
-                case 1:
-                    spellID = SPELL_RELIC_BUFF_1;
-                    break;
-                case 2:
-                    spellID = SPELL_RELIC_BUFF_2;
-                    break;
-                case 3:
-                    spellID = SPELL_RELIC_BUFF_3;
-                    break;
-                default:
-                    spellID = SPELL_RELIC_BUFF_3;
-                    break;
-            }
-
-            infectPlayers(spellID);
+        if(gracePeriod <= m_diff && startInfecting) { // Damage players without relic buffs
+            infectPlayers();
         }
 
         if(startInfecting) {
-            infectTimer -= m_diff;
+            gracePeriod -= m_diff;
         }
     }
 
+    startTimer -= m_diff;
+
+    if (startTimer <= m_diff && gameStarted && !aggressivePlayers) {
+        TurnPlayersAggressive();
+        aggressivePlayers = true;
+        char msg[250];
+        snprintf(msg, 250,
+                 "The Battle Royale has begun! Good luck! (Players: [%lu])",
+                 playersInRoyale.size());
+        sWorld->SendServerMessage(SERVER_MSG_STRING, msg);
+            game_master->Yell("The battle royal has begun!",
+                                LANG_UNIVERSAL);
+            return true;
+        }
+
     return true;
+}
+
+
+int BattleRoyale::getRelicBuffSpellID() {
+    int spellID;
+    switch(RELIC) {
+        case 1:
+            spellID = SPELL_RELIC_BUFF_1;
+            break;
+        case 2:
+            spellID = SPELL_RELIC_BUFF_2;
+            break;
+        case 3:
+            spellID = SPELL_RELIC_BUFF_3;
+            break;
+        default:
+            spellID = SPELL_RELIC_BUFF_3;
+            break;
+    }
+    return spellID;
 }
 
 
@@ -406,7 +424,21 @@ void BattleRoyale::TurnPlayersAggressive() {
 
 }
 
-void BattleRoyale::infectPlayers(int relicAuraSpellID) {
+void BattleRoyale::clearExistingRelicBuffs() {
+    int spellID = getRelicBuffSpellID();
+    for(GuidSet::iterator itr = playersInRoyale.begin(); itr != playersInRoyale.end();) {
+        ObjectGuid playerGuid = *itr;
+        ++itr;
+        if(Player* player = ObjectAccessor::FindPlayer(playerGuid)) {
+            if(player->IsAlive() && player->HasAura(spellID)) {
+                player->RemoveAura(spellID);
+            }
+        }
+    }
+}
+
+void BattleRoyale::infectPlayers() {
+    int relicAuraSpellID = getRelicBuffSpellID();
     for(GuidSet::iterator itr = playersInRoyale.begin(); itr != playersInRoyale.end();) {
         ObjectGuid playerGuid = *itr;
         ++itr;
@@ -533,19 +565,19 @@ GameObject* BattleRoyale::SpawnGameObject(uint32 entry, Position const& pos)
         return nullptr;
     }
 
-    go->SaveToDB(m_map->GetId(), (1 << m_map->GetSpawnMode()), PHASEMASK_NORMAL);
-    auto guid = go->GetSpawnId();
-    // delete the old object and do a clean load from DB with a fresh new GameObject instance.
-    // this is required to avoid weird behavior and memory leaks
-    delete go;
-
-    go = new GameObject();
-    // this will generate a new guid if the object is in an instance
-    if (!go->LoadFromDB(guid, m_map, true))
-    {
-        delete go;
-        return nullptr;
-    }
+//    go->SaveToDB(m_map->GetId(), (1 << m_map->GetSpawnMode()), PHASEMASK_NORMAL);
+//    auto guid = go->GetSpawnId();
+//    // delete the old object and do a clean load from DB with a fresh new GameObject instance.
+//    // this is required to avoid weird behavior and memory leaks
+//    delete go;
+//
+//    go = new GameObject();
+//    // this will generate a new guid if the object is in an instance
+//    if (!go->LoadFromDB(guid, m_map, true))
+//    {
+//        delete go;
+//        return nullptr;
+//    }
 
     // Add to world
     m_map->AddToMap(go);
